@@ -65,7 +65,7 @@ public class BookViewController: UIViewController, UIPopoverPresentationControll
         pdfView.autoScales = true
         pdfView.displayMode = .singlePage
         pdfView.displayDirection = .horizontal
-        pdfView.usePageViewController(true, withViewOptions: [UIPageViewControllerOptionInterPageSpacingKey: 20])
+        pdfView.usePageViewController(true, withViewOptions: [UIPageViewController.OptionsKey.interPageSpacing: 20])
 
         pdfView.addGestureRecognizer(pdfViewGestureRecognizer)
 
