@@ -29,7 +29,7 @@ public class BookViewController: UIViewController, UIPopoverPresentationControll
     @IBOutlet weak var outlineViewConainer: UIView!
     @IBOutlet weak var bookmarkViewConainer: UIView!
 
-    var bookmarkButton: UIBarButtonItem!
+    var bookmarkButton: UIBarButtonItem?
 
     var searchNavigationController: UINavigationController?
 
@@ -192,7 +192,7 @@ public class BookViewController: UIViewController, UIPopoverPresentationControll
         let brightnessButton = UIBarButtonItem(image: UIImage.init(named: "Brightness", in: bundle, compatibleWith: nil), style: .plain, target: self, action: #selector(showAppearanceMenu(_:)))
         let searchButton = UIBarButtonItem(image: UIImage.init(named: "Search", in: bundle, compatibleWith: nil), style: .plain, target: self, action: #selector(showSearchView(_:)))
         bookmarkButton = UIBarButtonItem(image: UIImage.init(named: "Bookmark-N", in: bundle, compatibleWith: nil), style: .plain, target: self, action: #selector(addOrRemoveBookmark(_:)))
-        navigationItem.rightBarButtonItems = [bookmarkButton, searchButton, brightnessButton]
+        navigationItem.rightBarButtonItems = [bookmarkButton!, searchButton, brightnessButton]
 
         pdfThumbnailViewContainer.alpha = 1
 
@@ -281,10 +281,10 @@ public class BookViewController: UIViewController, UIPopoverPresentationControll
                 if let index = bookmarks.index(of: pageIndex) {
                     bookmarks.remove(at: index)
                     UserDefaults.standard.set(bookmarks, forKey: documentURL)
-                    bookmarkButton.image = UIImage.init(named: "Bookmark-N", in: bundle, compatibleWith: nil)
+                    bookmarkButton?.image = UIImage.init(named: "Bookmark-N", in: bundle, compatibleWith: nil)
                 } else {
                     UserDefaults.standard.set((bookmarks + [pageIndex]).sorted(), forKey: documentURL)
-                    bookmarkButton.image = UIImage.init(named: "Bookmark-P", in: bundle, compatibleWith: nil)
+                    bookmarkButton?.image = UIImage.init(named: "Bookmark-P", in: bundle, compatibleWith: nil)
                 }
             }
         }
@@ -333,7 +333,7 @@ public class BookViewController: UIViewController, UIPopoverPresentationControll
             let bookmarks = UserDefaults.standard.array(forKey: documentURL) as? [Int],
             let currentPage = pdfView.currentPage,
             let index = pdfDocument?.index(for: currentPage) {
-            bookmarkButton.image = bookmarks.contains(index) ? UIImage.init(named: "Bookmark-P", in: bundle, compatibleWith: nil) : UIImage.init(named: "Bookmark-N", in: bundle, compatibleWith: nil)
+            bookmarkButton?.image = bookmarks.contains(index) ? UIImage.init(named: "Bookmark-P", in: bundle, compatibleWith: nil) : UIImage.init(named: "Bookmark-N", in: bundle, compatibleWith: nil)
         }
     }
 
