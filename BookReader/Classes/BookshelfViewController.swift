@@ -36,6 +36,7 @@ public class BookshelfViewController: UITableViewController {
         if let viewController = segue.destination as? BookViewController,
             let indexPath = tableView.indexPathForSelectedRow {
             viewController.pdfDocument = documents[indexPath.row]
+            viewController.bookmarksProvider = BookmarksProvider()
         }
     }
 

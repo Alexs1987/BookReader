@@ -38,9 +38,13 @@ public class BookViewController: UIViewController, UIPopoverPresentationControll
     
     var bundle: Bundle!
     
+    var bookmarksProvider: BookmarksProviderProtocol!
+    
     @objc public static func makeFromStoryboard() -> BookViewController
     {
-        return UIStoryboard(name: "BookReader", bundle: Bundle.bookReader).instantiateViewController(withIdentifier: "BookViewController") as! BookViewController
+        let bookViewController = UIStoryboard(name: "BookReader", bundle: Bundle.bookReader).instantiateViewController(withIdentifier: "BookViewController") as! BookViewController
+        bookViewController.bookmarksProvider = BookmarksProvider()
+        return bookViewController
     }
     
     override public func viewDidLoad() {
@@ -120,6 +124,7 @@ public class BookViewController: UIViewController, UIPopoverPresentationControll
         } else if let viewController = segue.destination as? BookmarkViewController {
             viewController.pdfDocument = pdfDocument
             viewController.delegate = self
+            viewController.bookmarksProvider = BookmarksProvider()
         }
     }
 
@@ -137,7 +142,7 @@ public class BookViewController: UIViewController, UIPopoverPresentationControll
                 mailComposeViewController.setSubject(title)
             }
             mailComposeViewController.addAttachmentData(attachmentData, mimeType: "application/pdf", fileName: lastPathComponent)
-            var presentationBlock: () -> () = { [weak self] in
+            let presentationBlock: () -> () = { [weak self] in
                 self?.present(mailComposeViewController, animated: true, completion: nil)
             }
             if presentedViewController != nil {
@@ -274,19 +279,16 @@ public class BookViewController: UIViewController, UIPopoverPresentationControll
     }
 
     @objc func addOrRemoveBookmark(_ sender: UIBarButtonItem) {
-        if let documentURL = pdfDocument?.documentURL?.absoluteString {
-            var bookmarks = UserDefaults.standard.array(forKey: documentURL) as? [Int] ?? [Int]()
-            if let currentPage = pdfView.currentPage,
-                let pageIndex = pdfDocument?.index(for: currentPage) {
-                if let index = bookmarks.index(of: pageIndex) {
-                    bookmarks.remove(at: index)
-                    UserDefaults.standard.set(bookmarks, forKey: documentURL)
-                    bookmarkButton?.image = UIImage.init(named: "Bookmark-N", in: bundle, compatibleWith: nil)
-                } else {
-                    UserDefaults.standard.set((bookmarks + [pageIndex]).sorted(), forKey: documentURL)
-                    bookmarkButton?.image = UIImage.init(named: "Bookmark-P", in: bundle, compatibleWith: nil)
-                }
-            }
+        guard let url = pdfDocument?.documentURL, let currentPage = pdfView.currentPage, let pageIndex = pdfDocument?.index(for: currentPage) else {
+            return
+        }
+        if bookmarksProvider.hasBookmark(for: url, pageIndex: pageIndex) {
+            bookmarksProvider.removeBookmark(for: url, pageIndex: pageIndex)
+            bookmarkButton?.image = UIImage.init(named: "Bookmark-N", in: bundle, compatibleWith: nil)
+        }
+        else {
+            bookmarksProvider.addBookmark(for: url, pageIndex: pageIndex)
+            bookmarkButton?.image = UIImage.init(named: "Bookmark-P", in: bundle, compatibleWith: nil)
         }
     }
 
@@ -329,12 +331,10 @@ public class BookViewController: UIViewController, UIPopoverPresentationControll
     }
 
     private func updateBookmarkStatus() {
-        if let documentURL = pdfDocument?.documentURL?.absoluteString,
-            let bookmarks = UserDefaults.standard.array(forKey: documentURL) as? [Int],
-            let currentPage = pdfView.currentPage,
-            let index = pdfDocument?.index(for: currentPage) {
-            bookmarkButton?.image = bookmarks.contains(index) ? UIImage.init(named: "Bookmark-P", in: bundle, compatibleWith: nil) : UIImage.init(named: "Bookmark-N", in: bundle, compatibleWith: nil)
+        guard let url = pdfDocument?.documentURL, let currentPage = pdfView.currentPage, let index = pdfDocument?.index(for: currentPage) else {
+            return
         }
+        bookmarkButton?.image = bookmarksProvider.hasBookmark(for: url, pageIndex: index) ? UIImage.init(named: "Bookmark-P", in: bundle, compatibleWith: nil) : UIImage.init(named: "Bookmark-N", in: bundle, compatibleWith: nil)
     }
 
     private func updatePageNumberLabel() {

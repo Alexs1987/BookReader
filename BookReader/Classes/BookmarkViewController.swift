@@ -12,6 +12,8 @@ import PDFKit
 public class BookmarkViewController: UICollectionViewController, UICollectionViewDelegateFlowLayout {
     var pdfDocument: PDFDocument?
     var bookmarks = [Int]()
+    
+    var bookmarksProvider: BookmarksProviderProtocol!
 
     weak var delegate: BookmarkViewControllerDelegate?
 
@@ -98,9 +100,8 @@ public class BookmarkViewController: UICollectionViewController, UICollectionVie
     }
 
     private func refreshData() {
-        if let documentURL = pdfDocument?.documentURL?.absoluteString,
-            let bookmarks = UserDefaults.standard.array(forKey: documentURL) as? [Int] {
-            self.bookmarks = bookmarks
+        if let documentURL = pdfDocument?.documentURL {
+            self.bookmarks = bookmarksProvider.bookmarks(for: documentURL) ?? [Int]()
             collectionView?.reloadData()
         }
     }
