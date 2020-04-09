@@ -131,8 +131,26 @@ public class BookViewController: UIViewController, UIPopoverPresentationControll
     public func adaptivePresentationStyle(for controller: UIPresentationController) -> UIModalPresentationStyle {
         return .none
     }
+    
+    public func adaptivePresentationStyle(for controller: UIPresentationController, traitCollection: UITraitCollection) -> UIModalPresentationStyle {
+           return .none
+       }
 
     func actionMenuViewControllerShareDocument(_ actionMenuViewController: ActionMenuViewController) {
+        guard MFMailComposeViewController.canSendMail() else {
+            let alertController = UIAlertController(title: "Email not configured", message: "Please configure your email and try again", preferredStyle: .alert)
+                   alertController.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+            let presentationBlock: () -> () = { [weak self] in
+                self?.present(alertController, animated: true, completion: nil)
+            }
+            if presentedViewController != nil {
+                presentedViewController?.dismiss(animated: true, completion: presentationBlock)
+            }
+            else {
+                presentationBlock()
+            }
+            return
+        }
         let mailComposeViewController = MFMailComposeViewController()
         mailComposeViewController.mailComposeDelegate = self
         if let lastPathComponent = pdfDocument?.documentURL?.lastPathComponent,
